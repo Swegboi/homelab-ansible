@@ -1,0 +1,22 @@
+---
+# Order matters: harden first, kill cockpit, then layer on postgres + backups.
+- name: Sanity check — confirm this is EL10
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['distribution_major_version'] == "10"
+    fail_msg: >
+      This role targets Rocky Linux 10 (EL10) specifically — package names
+      and the dnf-module-free PGDG install path differ on EL8/EL9.
+
+- name: Import OS hardening tasks
+  ansible.builtin.import_tasks: hardening.yml
+
+- name: Import Cockpit disable tasks
+  ansible.builtin.import_tasks: cockpit.yml
+  when: disable_cockpit | bool
+
+- name: Import PostgreSQL install/config tasks
+  ansible.builtin.import_tasks: postgresql.yml
+
+- name: Import pgBackRest install/config tasks
+  ansible.builtin.import_tasks: pgbackrest.yml

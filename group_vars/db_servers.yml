@@ -1,0 +1,25 @@
+---
+# Per-environment overrides. Copy this pattern for staging/prod as
+# group_vars/<groupname>.yml, or set the same keys as Host Variables
+# on individual hosts in Semaphore's inventory editor.
+
+# --- PostgreSQL sizing (tune per VM's actual RAM/CPU — see comments
+#     in templates/postgresql.conf.j2 for the sizing formulas) ---
+pg_shared_buffers: "2GB"
+pg_effective_cache_size: "6GB"
+pg_maintenance_work_mem: "512MB"
+pg_max_connections: 100
+pg_listen_addresses: "*"          # tighten to specific IPs in prod
+pg_allowed_subnet: "10.0.20.0/24" # used in pg_hba.conf.j2 and firewalld
+
+# --- pgBackRest ---
+pgbackrest_repo_type: posix        # posix | s3 (swap in tasks/pgbackrest.yml + template if using S3)
+pgbackrest_repo_path: /var/lib/pgbackrest
+pgbackrest_retention_full: 2
+pgbackrest_stanza: main
+
+# --- Hardening toggles ---
+disable_cockpit: true
+ssh_permit_root_login: "no"
+ssh_password_authentication: "no"
+firewalld_allow_postgres: true

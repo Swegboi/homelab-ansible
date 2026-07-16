@@ -1,0 +1,51 @@
+# {{ ansible_managed }}
+# Base postgresql.conf for {{ inventory_hostname }} — generated from
+# roles/rocky10_pg_base/templates/postgresql.conf.j2. Edit the source
+# template or group_vars, not this file — it will be overwritten on the
+# next Semaphore run.
+
+# --- Connections ---
+listen_addresses = '{{ pg_listen_addresses }}'
+port = {{ pg_port }}
+max_connections = {{ pg_max_connections }}
+
+# --- Memory ---
+# shared_buffers: ~25% of RAM. effective_cache_size: ~50-75% of RAM.
+# maintenance_work_mem: bump for faster VACUUM/index builds, watch total
+# RAM if several maintenance ops can run concurrently.
+shared_buffers = '{{ pg_shared_buffers }}'
+effective_cache_size = '{{ pg_effective_cache_size }}'
+maintenance_work_mem = '{{ pg_maintenance_work_mem }}'
+work_mem = 16MB
+
+# --- WAL / replication / backup ---
+wal_level = {{ pg_wal_level }}
+max_wal_size = '{{ pg_max_wal_size }}'
+min_wal_size = '{{ pg_min_wal_size }}'
+archive_mode = on
+archive_command = 'pgbackrest --stanza={{ pgbackrest_stanza }} archive-push %p'
+archive_timeout = 300
+
+# --- Checkpointing ---
+checkpoint_completion_target = 0.9
+
+# --- Logging (keep it boring but useful for troubleshooting) ---
+log_destination = 'stderr'
+logging_collector = on
+log_directory = 'log'
+log_filename = 'postgresql-%a.log'
+log_rotation_age = 1d
+log_rotation_size = 0
+log_min_duration_statement = 1000   # log queries over 1s
+log_line_prefix = '%m [%p] %q%u@%d '
+log_checkpoints = on
+log_connections = on
+log_disconnections = on
+log_lock_waits = on
+
+# --- Autovacuum: leave on, don't fight it without a specific reason ---
+autovacuum = on
+
+# --- SSL: on by default on EL via the redhat-provided snakeoil cert;
+# swap in real certs and set ssl_cert_file/ssl_key_file for production ---
+ssl = on

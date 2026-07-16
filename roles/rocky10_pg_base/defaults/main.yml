@@ -1,0 +1,40 @@
+---
+# All of these can be overridden in group_vars/host_vars or Semaphore's
+# Environment. Values here are safe-ish defaults for a small VM.
+
+# --- PostgreSQL version/paths ---
+pg_major_version: "18"
+pg_data_dir: "/var/lib/pgsql/{{ pg_major_version }}/data"
+pg_bin_dir: "/usr/pgsql-{{ pg_major_version }}/bin"
+pg_service_name: "postgresql-{{ pg_major_version }}"
+pg_port: 5432
+
+# --- PostgreSQL tuning (overridden per-VM in group_vars) ---
+pg_listen_addresses: "localhost"
+pg_max_connections: 100
+pg_shared_buffers: "256MB"
+pg_effective_cache_size: "1GB"
+pg_maintenance_work_mem: "64MB"
+pg_wal_level: "replica"
+pg_max_wal_size: "2GB"
+pg_min_wal_size: "80MB"
+pg_allowed_subnet: "127.0.0.1/32"
+
+# --- pgBackRest ---
+pgbackrest_stanza: "main"
+pgbackrest_repo_type: "posix"
+pgbackrest_repo_path: "/var/lib/pgbackrest"
+pgbackrest_retention_full: 2
+pgbackrest_process_max: 2
+pgbackrest_compress_type: "zst"
+pgbackrest_install_backup_timer: true
+pgbackrest_backup_schedule: "OnCalendar=*-*-* 02:00:00" # systemd timer syntax
+
+# --- Hardening ---
+disable_cockpit: true
+ssh_permit_root_login: "no"
+ssh_password_authentication: "no"
+ssh_port: 22
+firewalld_allow_postgres: true
+enable_fail2ban: true
+enable_automatic_updates: true

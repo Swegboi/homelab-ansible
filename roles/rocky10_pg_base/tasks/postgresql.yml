@@ -1,0 +1,81 @@
+---
+# EL10 dropped dnf modularity, so there's no `dnf module disable postgresql`
+# step like on EL8/EL9 — instead we just make sure the AppStream/BaseOS
+# copies of postgresql* are excluded so they never shadow the PGDG ones.
+
+- name: Check if PGDG repo is already installed
+  ansible.builtin.stat:
+    path: /etc/yum.repos.d/pgdg-redhat-all.repo
+  register: pgdg_repo_file
+
+- name: Install the PostgreSQL Global Development Group (PGDG) repo RPM
+  ansible.builtin.dnf:
+    name: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-10-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
+    state: present
+    disable_gpg_check: false
+  when: not pgdg_repo_file.stat.exists
+
+- name: Exclude distro postgresql packages so PGDG always wins
+  community.general.ini_file:
+    path: /etc/dnf/dnf.conf
+    section: main
+    option: exclude
+    value: "postgresql* "
+    no_extra_spaces: true
+    mode: "0644"
+
+- name: Install PostgreSQL {{ pg_major_version }} server + client + contrib
+  ansible.builtin.dnf:
+    name:
+      - "postgresql{{ pg_major_version }}-server"
+      - "postgresql{{ pg_major_version }}-contrib"
+    state: present
+
+- name: Check whether the data directory is already initialized
+  ansible.builtin.stat:
+    path: "{{ pg_data_dir }}/PG_VERSION"
+  register: pg_data_initialized
+
+- name: Initialize the PostgreSQL {{ pg_major_version }} database cluster
+  ansible.builtin.command: "{{ pg_bin_dir }}/postgresql-{{ pg_major_version }}-setup initdb"
+  when: not pg_data_initialized.stat.exists
+
+- name: Deploy postgresql.conf
+  ansible.builtin.template:
+    src: postgresql.conf.j2
+    dest: "{{ pg_data_dir }}/postgresql.conf"
+    owner: postgres
+    group: postgres
+    mode: "0600"
+  notify: restart postgresql
+
+- name: Deploy pg_hba.conf
+  ansible.builtin.template:
+    src: pg_hba.conf.j2
+    dest: "{{ pg_data_dir }}/pg_hba.conf"
+    owner: postgres
+    group: postgres
+    mode: "0600"
+  notify: reload postgresql
+
+- name: Enable and start PostgreSQL {{ pg_major_version }}
+  ansible.builtin.systemd:
+    name: "{{ pg_service_name }}"
+    state: started
+    enabled: true
+
+- name: Allow the PostgreSQL port through firewalld
+  ansible.posix.firewalld:
+    port: "{{ pg_port }}/tcp"
+    permanent: true
+    immediate: true
+    state: enabled
+  when: firewalld_allow_postgres | bool
+
+- name: Confirm SELinux port context includes {{ pg_port }} (only needed if you changed the port)
+  community.general.seport:
+    ports: "{{ pg_port }}"
+    proto: tcp
+    setype: postgresql_port_t
+    state: present
+  when: pg_port != 5432

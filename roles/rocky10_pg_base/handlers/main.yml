@@ -1,0 +1,20 @@
+---
+- name: restart postgresql
+  ansible.builtin.systemd:
+    name: "{{ pg_service_name }}"
+    state: restarted
+
+- name: reload postgresql
+  ansible.builtin.systemd:
+    name: "{{ pg_service_name }}"
+    state: reloaded
+
+- name: restart sshd
+  ansible.builtin.systemd:
+    name: sshd
+    state: restarted
+
+- name: reload firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    state: reloaded

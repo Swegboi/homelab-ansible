@@ -1,0 +1,11 @@
+---
+# Install with: ansible-galaxy collection install -r requirements.yml
+# On the Semaphore box, add this same file as a "requirements.yml" in the
+# repo root — Semaphore auto-detects and installs it before each run if
+# you enable that in the Task Template's advanced options. Otherwise run
+# it once manually on the Semaphore host/container.
+collections:
+  - name: ansible.posix
+    version: ">=1.5.0"
+  - name: community.general
+    version: ">=8.0.0"

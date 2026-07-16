@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# Drop-in placed in /etc/ssh/sshd_config.d/ — files here are read after
+# the main sshd_config, last match wins, so this safely overrides defaults
+# without you having to hand-edit the shipped file.
+Port {{ ssh_port }}
+PermitRootLogin {{ ssh_permit_root_login }}
+PasswordAuthentication {{ ssh_password_authentication }}
+PubkeyAuthentication yes
+MaxAuthTries 4
+ClientAliveInterval 300
+ClientAliveCountMax 2
+X11Forwarding no
+AllowTcpForwarding no

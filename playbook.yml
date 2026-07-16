@@ -1,0 +1,10 @@
+---
+# Entry point playbook. In Semaphore, this is the "Playbook Filename"
+# on your Task Template.
+- name: Base-harden Rocky 10 and stand up PostgreSQL 18 + pgBackRest
+  hosts: db_servers
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: rocky10_pg_base

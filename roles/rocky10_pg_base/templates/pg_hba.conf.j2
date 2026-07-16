@@ -1,0 +1,16 @@
+# {{ ansible_managed }}
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+# Local socket connections (used by pgbackrest, cron jobs, psql on-box)
+local   all             all                                     peer
+local   replication     postgres                                peer
+
+# Loopback
+host    all             all             127.0.0.1/32            scram-sha-256
+host    all             all             ::1/128                 scram-sha-256
+
+# Application/admin network — tighten pg_allowed_subnet in group_vars
+host    all             all             {{ pg_allowed_subnet }} scram-sha-256
+
+# Replication from within the same subnet only (adjust if you stand up replicas)
+host    replication     replicator      {{ pg_allowed_subnet }} scram-sha-256

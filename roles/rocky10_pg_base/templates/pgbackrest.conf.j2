@@ -1,0 +1,26 @@
+# {{ ansible_managed }}
+[global]
+repo1-path={{ pgbackrest_repo_path }}
+repo1-retention-full={{ pgbackrest_retention_full }}
+process-max={{ pgbackrest_process_max }}
+compress-type={{ pgbackrest_compress_type }}
+start-fast=y
+log-level-console=info
+log-level-file=detail
+
+{% if pgbackrest_repo_type == "posix" %}
+repo1-type=posix
+{% elif pgbackrest_repo_type == "s3" %}
+# Fill these in via group_vars/Semaphore Environment — do not commit real
+# keys to git. Example shown for reference only.
+repo1-type=s3
+repo1-s3-bucket={{ pgbackrest_s3_bucket | default('CHANGE_ME') }}
+repo1-s3-endpoint={{ pgbackrest_s3_endpoint | default('s3.amazonaws.com') }}
+repo1-s3-region={{ pgbackrest_s3_region | default('us-east-1') }}
+repo1-s3-key={{ pgbackrest_s3_key | default('CHANGE_ME') }}
+repo1-s3-key-secret={{ pgbackrest_s3_key_secret | default('CHANGE_ME') }}
+{% endif %}
+
+[{{ pgbackrest_stanza }}]
+pg1-path={{ pg_data_dir }}
+pg1-port={{ pg_port }}
